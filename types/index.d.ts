@@ -4,7 +4,9 @@ declare global {
         _requestURL: string | URL;
     }
 }
-type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'>;
+type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'> & {
+    ignoreLocalhost?: boolean;
+};
 declare class OpErrorNotifier {
     private endpoint;
     private options;

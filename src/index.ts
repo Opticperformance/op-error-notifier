@@ -8,7 +8,9 @@ declare global {
   }
 }
 
-type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'>;
+type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'> & {
+  ignoreLocalhost?: boolean;
+};
 
 type NotificationDetails = {
   target?: URL | RequestInfo,
@@ -60,12 +62,16 @@ class OpErrorNotifier {
   }
 
   public init(): void {
+    if (this.options.ignoreLocalhost && window.location.hostname === 'localhost') {
+      return;
+    }
+
     const self = this;
 
     // Intercept JavaScript errors
-    window.onerror = function (message, filename, lineno, colno) {
+    window.onerror = function (_, filename, lineno, colno, error) {
       self.sendNotification({
-        errorText: message,
+        errorText: error?.stack || error?.message || error?.toString(),
         filename,
         lineno,
         colno,

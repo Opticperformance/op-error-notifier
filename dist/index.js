@@ -31,10 +31,13 @@ class OpErrorNotifier {
         });
     }
     init() {
+        if (this.options.ignoreLocalhost && window.location.hostname === 'localhost') {
+            return;
+        }
         const self = this;
-        window.onerror = function (message, filename, lineno, colno) {
+        window.onerror = function (_, filename, lineno, colno, error) {
             self.sendNotification({
-                errorText: message,
+                errorText: error?.stack || error?.message || error?.toString(),
                 filename,
                 lineno,
                 colno,
