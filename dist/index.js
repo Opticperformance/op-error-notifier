@@ -10,7 +10,7 @@ class OpErrorNotifier {
     originalFetch = window.fetch.bind(window);
     constructor(endpoint, options = {}) {
         this.endpoint = endpoint;
-        this.options = options;
+        this.options = { ignoreLocalhost: true, ...options };
     }
     sendNotification(details) {
         const { os, name: browserName, version: browserVersion } = (0, detect_browser_1.detect)();
@@ -35,12 +35,10 @@ class OpErrorNotifier {
             return;
         }
         const self = this;
-        window.onerror = function (_, filename, lineno, colno, error) {
+        window.onerror = function () {
+            const error = arguments[4];
             self.sendNotification({
-                errorText: error?.stack || error?.message || error?.toString(),
-                filename,
-                lineno,
-                colno,
+                errorText: error?.stack || error?.message || error?.toString()
             });
             return false;
         };

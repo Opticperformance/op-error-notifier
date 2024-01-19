@@ -17,10 +17,7 @@ type NotificationDetails = {
   method?: string,
   statusCode?: number,
   statusText?: string,
-  filename?: string,
   errorText?: string | Event,
-  lineno?: number,
-  colno?: number,
 }
 
 class OpErrorNotifier {
@@ -34,7 +31,7 @@ class OpErrorNotifier {
 
   constructor(endpoint: URL | RequestInfo, options: RequestInitRestricted = {}) {
     this.endpoint = endpoint;
-    this.options = options;
+    this.options = { ignoreLocalhost: true, ...options };
   }
 
   // Helper function to log error information
@@ -69,12 +66,11 @@ class OpErrorNotifier {
     const self = this;
 
     // Intercept JavaScript errors
-    window.onerror = function (_, filename, lineno, colno, error) {
+    window.onerror = function () {
+      const error = arguments[4] as Error;
+
       self.sendNotification({
-        errorText: error?.stack || error?.message || error?.toString(),
-        filename,
-        lineno,
-        colno,
+        errorText: error?.stack || error?.message || error?.toString()
       });
 
       // Let the browser handle the error
