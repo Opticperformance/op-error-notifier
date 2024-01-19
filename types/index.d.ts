@@ -11,7 +11,7 @@ declare class OpErrorNotifier {
     private originalXMLHttpRequestOpen;
     private originalXMLHttpRequestSend;
     private originalFetch;
-    constructor(endpoint: string, options?: RequestInitRestricted);
+    constructor(endpoint: URL | RequestInfo, options?: RequestInitRestricted);
     private sendNotification;
     init(): void;
 }

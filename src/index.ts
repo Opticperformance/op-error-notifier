@@ -11,7 +11,7 @@ declare global {
 type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'>;
 
 class OpErrorNotifier {
-  private endpoint: string;
+  private endpoint: URL | RequestInfo;
   private options: RequestInitRestricted;
 
   // Save references to the original methods
@@ -19,7 +19,7 @@ class OpErrorNotifier {
   private originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
   private originalFetch = window.fetch.bind(window);
 
-  constructor(endpoint: string, options: RequestInitRestricted = {}) {
+  constructor(endpoint: URL | RequestInfo, options: RequestInitRestricted = {}) {
     this.endpoint = endpoint;
     this.options = options;
   }
