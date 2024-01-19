@@ -15,4 +15,4 @@ declare class OpErrorNotifier {
     private sendNotification;
     init(): void;
 }
-export default OpErrorNotifier;
+export { OpErrorNotifier };

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.OpErrorNotifier = void 0;
 const detect_browser_1 = require("detect-browser");
 class OpErrorNotifier {
     endpoint;
@@ -67,4 +68,4 @@ class OpErrorNotifier {
         };
     }
 }
-exports.default = OpErrorNotifier;
+exports.OpErrorNotifier = OpErrorNotifier;

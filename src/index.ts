@@ -120,4 +120,4 @@ class OpErrorNotifier {
   }
 }
 
-export default OpErrorNotifier;
+export { OpErrorNotifier };
