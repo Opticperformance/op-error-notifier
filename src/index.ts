@@ -10,6 +10,17 @@ declare global {
 
 type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'>;
 
+type NotificationDetails = {
+  target?: URL | RequestInfo,
+  method?: string,
+  statusCode?: number,
+  statusText?: string,
+  filename?: string,
+  errorText?: string | Event,
+  lineno?: number,
+  colno?: number,
+}
+
 class OpErrorNotifier {
   private endpoint: URL | RequestInfo;
   private options: RequestInitRestricted;
@@ -26,25 +37,9 @@ class OpErrorNotifier {
 
   // Helper function to log error information
   private sendNotification(
-    target: URL | RequestInfo,
-    method: string,
-    responseCode: number,
-    responseText: string
+    details: NotificationDetails
   ) {
-    const { name, os, type, version } = detect() as BrowserInfo;
-
-    const errorDetails = {
-      origin: window.location.href,
-      target,
-      method,
-      responseCode,
-      responseText,
-      browserName: name,
-      browserVersion: version,
-      browserOS: os,
-      browserType: type,
-      timestamp: new Date().toISOString(),
-    };
+    const { os, name: browserName, version: browserVersion } = detect() as BrowserInfo;
 
     // Send error details to the server
     this.originalFetch(this.endpoint, {
@@ -53,13 +48,34 @@ class OpErrorNotifier {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(errorDetails),
+      body: JSON.stringify({
+        ...details,
+        origin: window.location.href,
+        browserName,
+        browserVersion,
+        os,
+        timestamp: new Date().toISOString(),
+      }),
     });
   }
 
   public init(): void {
     const self = this;
 
+    // Intercept JavaScript errors
+    window.onerror = function (message, filename, lineno, colno) {
+      self.sendNotification({
+        errorText: message,
+        filename,
+        lineno,
+        colno,
+      });
+
+      // Let the browser handle the error
+      return false;
+    };
+
+    // Override XMLHttpRequest open method
     window.XMLHttpRequest.prototype.open = function (
       method: string,
       url: string | URL
@@ -81,10 +97,12 @@ class OpErrorNotifier {
         if (this.status >= 400) {
           // Log error details if the response code indicates an error
           self.sendNotification(
-            this._requestURL,
-            this._requestMethod,
-            this.status,
-            this.statusText
+            {
+              target: this._requestURL,
+              method: this._requestMethod,
+              statusCode: this.status,
+              statusText: this.statusText,
+            }
           );
         }
       });
@@ -103,17 +121,24 @@ class OpErrorNotifier {
         const response = await self.originalFetch(url, options);
         if (!response.ok) {
           // Log error details if the response code indicates an error
-          self.sendNotification(
-            url,
+          self.sendNotification({
+            target: url,
             method,
-            response.status,
-            response.statusText
-          );
+            statusCode: response.status,
+            statusText: response.statusText,
+          });
         }
         return response;
       } catch (error: any) {
         // Log error details for network errors
-        self.sendNotification(url, method, 0, error.message);
+        self.sendNotification(
+          {
+            target: url,
+            method,
+            statusCode: 0,
+            errorText: error.message,
+          }
+          );
         throw error;
       }
     };

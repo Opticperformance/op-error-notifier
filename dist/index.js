@@ -12,31 +12,35 @@ class OpErrorNotifier {
         this.endpoint = endpoint;
         this.options = options;
     }
-    sendNotification(target, method, responseCode, responseText) {
-        const { name, os, type, version } = (0, detect_browser_1.detect)();
-        const errorDetails = {
-            origin: window.location.href,
-            target,
-            method,
-            responseCode,
-            responseText,
-            browserName: name,
-            browserVersion: version,
-            browserOS: os,
-            browserType: type,
-            timestamp: new Date().toISOString(),
-        };
+    sendNotification(details) {
+        const { os, name: browserName, version: browserVersion } = (0, detect_browser_1.detect)();
         this.originalFetch(this.endpoint, {
             ...this.options,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(errorDetails),
+            body: JSON.stringify({
+                ...details,
+                origin: window.location.href,
+                browserName,
+                browserVersion,
+                os,
+                timestamp: new Date().toISOString(),
+            }),
         });
     }
     init() {
         const self = this;
+        window.onerror = function (message, filename, lineno, colno) {
+            self.sendNotification({
+                errorText: message,
+                filename,
+                lineno,
+                colno,
+            });
+            return false;
+        };
         window.XMLHttpRequest.prototype.open = function (method, url) {
             this._requestMethod = method;
             this._requestURL = url;
@@ -46,7 +50,12 @@ class OpErrorNotifier {
         window.XMLHttpRequest.prototype.send = function () {
             this.addEventListener('load', function () {
                 if (this.status >= 400) {
-                    self.sendNotification(this._requestURL, this._requestMethod, this.status, this.statusText);
+                    self.sendNotification({
+                        target: this._requestURL,
+                        method: this._requestMethod,
+                        statusCode: this.status,
+                        statusText: this.statusText,
+                    });
                 }
             });
             const args = [arguments[0]];
@@ -57,12 +66,22 @@ class OpErrorNotifier {
             try {
                 const response = await self.originalFetch(url, options);
                 if (!response.ok) {
-                    self.sendNotification(url, method, response.status, response.statusText);
+                    self.sendNotification({
+                        target: url,
+                        method,
+                        statusCode: response.status,
+                        statusText: response.statusText,
+                    });
                 }
                 return response;
             }
             catch (error) {
-                self.sendNotification(url, method, 0, error.message);
+                self.sendNotification({
+                    target: url,
+                    method,
+                    statusCode: 0,
+                    errorText: error.message,
+                });
                 throw error;
             }
         };

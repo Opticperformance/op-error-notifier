@@ -9,5 +9,5 @@
     "declarationDir": "types",
     "removeComments": true,
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
 }
