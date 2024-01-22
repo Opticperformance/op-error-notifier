@@ -10,9 +10,6 @@ type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'> & {
 declare class OpErrorNotifier {
     private endpoint;
     private options;
-    private windowExists;
-    private XMLHttpRequestExists;
-    private fetchExists;
     private originalXMLHttpRequestOpen;
     private originalXMLHttpRequestSend;
     private originalFetch;
