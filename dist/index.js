@@ -1,44 +1,41 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OpErrorNotifier = void 0;
 const detect_browser_1 = require("detect-browser");
 class OpErrorNotifier {
-    endpoint;
-    options;
-    originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
-    originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
-    originalFetch = window.fetch.bind(window);
     constructor(endpoint, options = {}) {
+        this.originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
+        this.originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
+        this.originalFetch = window.fetch.bind(window);
         this.endpoint = endpoint;
-        this.options = { ignoreLocalhost: true, ...options };
+        this.options = Object.assign({ ignoreLocalhost: true }, options);
     }
     sendNotification(details) {
         const { os, name: browserName, version: browserVersion } = (0, detect_browser_1.detect)();
-        this.originalFetch(this.endpoint, {
-            ...this.options,
-            method: 'POST',
-            headers: {
+        this.originalFetch(this.endpoint, Object.assign(Object.assign({}, this.options), { method: 'POST', headers: {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                ...details,
-                origin: window.location.href,
-                browserName,
+            }, body: JSON.stringify(Object.assign(Object.assign({}, details), { origin: window.location.href, browserName,
                 browserVersion,
-                os,
-                timestamp: new Date().toISOString(),
-            }),
-        });
+                os, timestamp: new Date().toISOString() })) }));
     }
     init() {
-        if (this.options.ignoreLocalhost && window.location.hostname === 'localhost') {
+        if (this.options.ignoreLocalhost && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
             return;
         }
         const self = this;
         window.onerror = function () {
             const error = arguments[4];
             self.sendNotification({
-                errorText: error?.stack || error?.message || error?.toString()
+                errorText: (error === null || error === void 0 ? void 0 : error.stack) || (error === null || error === void 0 ? void 0 : error.message) || (error === null || error === void 0 ? void 0 : error.toString())
             });
             return false;
         };
@@ -62,29 +59,31 @@ class OpErrorNotifier {
             const args = [arguments[0]];
             return self.originalXMLHttpRequestSend.apply(this, args);
         };
-        window.fetch = async function (url, options) {
-            const method = (options && options.method) || 'GET';
-            try {
-                const response = await self.originalFetch(url, options);
-                if (!response.ok) {
+        window.fetch = function (url, options) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const method = (options && options.method) || 'GET';
+                try {
+                    const response = yield self.originalFetch(url, options);
+                    if (!response.ok) {
+                        self.sendNotification({
+                            target: url,
+                            method,
+                            statusCode: response.status,
+                            statusText: response.statusText,
+                        });
+                    }
+                    return response;
+                }
+                catch (error) {
                     self.sendNotification({
                         target: url,
                         method,
-                        statusCode: response.status,
-                        statusText: response.statusText,
+                        statusCode: 0,
+                        errorText: error.message,
                     });
+                    throw error;
                 }
-                return response;
-            }
-            catch (error) {
-                self.sendNotification({
-                    target: url,
-                    method,
-                    statusCode: 0,
-                    errorText: error.message,
-                });
-                throw error;
-            }
+            });
         };
     }
 }

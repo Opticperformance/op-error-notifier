@@ -59,7 +59,7 @@ class OpErrorNotifier {
   }
 
   public init(): void {
-    if (this.options.ignoreLocalhost && window.location.hostname === 'localhost') {
+    if (this.options.ignoreLocalhost && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
       return;
     }
 
