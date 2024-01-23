@@ -35,6 +35,7 @@ class OpErrorNotifier {
   constructor(endpoint: URL | RequestInfo, options: RequestInitRestricted = {}) {
     this.endpoint = endpoint;
     this.options = { ignoreLocalhost: true, ...options };
+    this.ressourceErrorHandler = this.ressourceErrorHandler.bind(this);
   }
 
   // Helper function to log error information
@@ -61,11 +62,11 @@ class OpErrorNotifier {
     });
   }
 
-  private ressourceErrorHandler (event: Event, self = this): void {
+  private ressourceErrorHandler (event: Event): void {
     const target = event.target as HTMLResourceElement;
     const { src, href } = target as { src?: string, href?: string };
 
-    self.sendNotification({
+    this.sendNotification({
       target: src || href,
       errorText: 'Error: Failed to load resource'
     });

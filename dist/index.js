@@ -19,6 +19,7 @@ class OpErrorNotifier {
         this.ressourceElementNames = ['script', 'link', 'img', 'audio', 'video'];
         this.endpoint = endpoint;
         this.options = Object.assign({ ignoreLocalhost: true }, options);
+        this.ressourceErrorHandler = this.ressourceErrorHandler.bind(this);
     }
     sendNotification(details) {
         const { os, name: browserName, version: browserVersion } = (0, detect_browser_1.detect)();
@@ -28,10 +29,10 @@ class OpErrorNotifier {
                 browserVersion,
                 os, timestamp: new Date().toISOString() })) }));
     }
-    ressourceErrorHandler(event, self = this) {
+    ressourceErrorHandler(event) {
         const target = event.target;
         const { src, href } = target;
-        self.sendNotification({
+        this.sendNotification({
             target: src || href,
             errorText: 'Error: Failed to load resource'
         });
