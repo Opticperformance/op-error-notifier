@@ -6,10 +6,6 @@ declare global {
     _requestMethod: string;
     _requestURL: string | URL;
   }
-
-  interface Window {
-    OpErrorNotifier: typeof OpErrorNotifier;
-  }
 }
 
 type RequestInitRestricted = Omit<RequestInit, 'method' | 'body'> & {
@@ -151,4 +147,4 @@ class OpErrorNotifier {
   }
 }
 
-window.OpErrorNotifier = OpErrorNotifier;
+export { OpErrorNotifier };
