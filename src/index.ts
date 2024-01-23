@@ -20,7 +20,7 @@ type NotificationDetails = {
   errorText?: string | Event,
 }
 
-type HTMLResourceElement = HTMLScriptElement | HTMLLinkElement | HTMLMediaElement | HTMLImageElement;
+type HTMLResourceElement = HTMLScriptElement | HTMLLinkElement | HTMLMediaElement | HTMLImageElement | SVGImageElement;
 
 class OpErrorNotifier {
   private endpoint: URL | RequestInfo;
@@ -30,7 +30,7 @@ class OpErrorNotifier {
   private originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
   private originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
   private originalFetch = window.fetch.bind(window);
-  private ressourceElementNames = ['script', 'link', 'img', 'audio', 'video'] as const;
+  private ressourceElementNames = ['script', 'link', 'img', 'audio', 'video', 'image'] as const;
 
   constructor(endpoint: URL | RequestInfo, options: RequestInitRestricted = {}) {
     this.endpoint = endpoint;

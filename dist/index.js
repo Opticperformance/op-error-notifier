@@ -16,7 +16,7 @@ class OpErrorNotifier {
         this.originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
         this.originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
         this.originalFetch = window.fetch.bind(window);
-        this.ressourceElementNames = ['script', 'link', 'img', 'audio', 'video'];
+        this.ressourceElementNames = ['script', 'link', 'img', 'audio', 'video', 'image'];
         this.endpoint = endpoint;
         this.options = Object.assign({ ignoreLocalhost: true }, options);
         this.ressourceErrorHandler = this.ressourceErrorHandler.bind(this);
