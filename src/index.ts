@@ -20,6 +20,8 @@ type NotificationDetails = {
   errorText?: string | Event,
 }
 
+type HTMLResourceElement = HTMLScriptElement | HTMLLinkElement | HTMLMediaElement | HTMLImageElement;
+
 class OpErrorNotifier {
   private endpoint: URL | RequestInfo;
   private options: RequestInitRestricted;
@@ -28,6 +30,7 @@ class OpErrorNotifier {
   private originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
   private originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
   private originalFetch = window.fetch.bind(window);
+  private ressourceElementNames = ['script', 'link', 'img', 'audio', 'video'] as const;
 
   constructor(endpoint: URL | RequestInfo, options: RequestInitRestricted = {}) {
     this.endpoint = endpoint;
@@ -58,12 +61,42 @@ class OpErrorNotifier {
     });
   }
 
+  private ressourceErrorHandler (event: Event): void {
+    const target = event.target as HTMLResourceElement;
+    const { src, href } = target as { src?: string, href?: string };
+
+    this.sendNotification({
+      target: src || href,
+      errorText: 'Error: Failed to load resource'
+    });
+  }
+
   public init(): void {
     if (this.options.ignoreLocalhost && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
       return;
     }
 
     const self = this;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll(this.ressourceElementNames.join(',')).forEach((element) => {
+        element.addEventListener('error', this.ressourceErrorHandler);
+      });
+    });
+
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1 && this.ressourceElementNames.includes(node.nodeName.toLowerCase() as typeof this.ressourceElementNames[number])) {
+              node.addEventListener('error', this.ressourceErrorHandler);
+            }
+          });
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { childList: true, subtree: true });
 
     // Intercept JavaScript errors
     window.onerror = function () {

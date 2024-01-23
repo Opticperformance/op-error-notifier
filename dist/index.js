@@ -16,6 +16,7 @@ class OpErrorNotifier {
         this.originalXMLHttpRequestOpen = window.XMLHttpRequest.prototype.open;
         this.originalXMLHttpRequestSend = window.XMLHttpRequest.prototype.send;
         this.originalFetch = window.fetch.bind(window);
+        this.ressourceElementNames = ['script', 'link', 'img', 'audio', 'video'];
         this.endpoint = endpoint;
         this.options = Object.assign({ ignoreLocalhost: true }, options);
     }
@@ -27,11 +28,36 @@ class OpErrorNotifier {
                 browserVersion,
                 os, timestamp: new Date().toISOString() })) }));
     }
+    ressourceErrorHandler(event) {
+        const target = event.target;
+        const { src, href } = target;
+        this.sendNotification({
+            target: src || href,
+            errorText: 'Error: Failed to load resource'
+        });
+    }
     init() {
         if (this.options.ignoreLocalhost && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
             return;
         }
         const self = this;
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll(this.ressourceElementNames.join(',')).forEach((element) => {
+                element.addEventListener('error', this.ressourceErrorHandler);
+            });
+        });
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1 && this.ressourceElementNames.includes(node.nodeName.toLowerCase())) {
+                            node.addEventListener('error', this.ressourceErrorHandler);
+                        }
+                    });
+                }
+            }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
         window.onerror = function () {
             const error = arguments[4];
             self.sendNotification({

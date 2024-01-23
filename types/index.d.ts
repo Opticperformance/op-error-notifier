@@ -13,8 +13,10 @@ declare class OpErrorNotifier {
     private originalXMLHttpRequestOpen;
     private originalXMLHttpRequestSend;
     private originalFetch;
+    private ressourceElementNames;
     constructor(endpoint: URL | RequestInfo, options?: RequestInitRestricted);
     private sendNotification;
+    private ressourceErrorHandler;
     init(): void;
 }
 export { OpErrorNotifier };
