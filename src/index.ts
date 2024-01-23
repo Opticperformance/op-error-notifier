@@ -61,11 +61,11 @@ class OpErrorNotifier {
     });
   }
 
-  private ressourceErrorHandler (event: Event): void {
+  private ressourceErrorHandler (event: Event, self = this): void {
     const target = event.target as HTMLResourceElement;
     const { src, href } = target as { src?: string, href?: string };
 
-    this.sendNotification({
+    self.sendNotification({
       target: src || href,
       errorText: 'Error: Failed to load resource'
     });

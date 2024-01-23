@@ -28,10 +28,10 @@ class OpErrorNotifier {
                 browserVersion,
                 os, timestamp: new Date().toISOString() })) }));
     }
-    ressourceErrorHandler(event) {
+    ressourceErrorHandler(event, self = this) {
         const target = event.target;
         const { src, href } = target;
-        this.sendNotification({
+        self.sendNotification({
             target: src || href,
             errorText: 'Error: Failed to load resource'
         });
