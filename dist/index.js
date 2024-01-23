@@ -33,7 +33,7 @@ class OpErrorNotifier {
         const target = event.target;
         const { src, href } = target;
         this.sendNotification({
-            target: src || href,
+            target: src || (href instanceof SVGAnimatedString ? href.baseVal : href),
             errorText: 'Error: Failed to load resource'
         });
     }

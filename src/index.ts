@@ -64,10 +64,10 @@ class OpErrorNotifier {
 
   private ressourceErrorHandler (event: Event): void {
     const target = event.target as HTMLResourceElement;
-    const { src, href } = target as { src?: string, href?: string };
+    const { src, href } = target as { src?: string, href?: string | SVGAnimatedString };
 
     this.sendNotification({
-      target: src || href,
+      target: src || (href instanceof SVGAnimatedString ? href.baseVal : href),
       errorText: 'Error: Failed to load resource'
     });
   }
