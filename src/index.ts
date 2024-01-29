@@ -121,7 +121,7 @@ class OpErrorNotifier {
       this._requestURL = url;
 
       // Define the expected type for the arguments object
-      const args: [string, string | URL, boolean, string | undefined, string | undefined] = [method, url, false, undefined, undefined];
+      const args: [string, string | URL, boolean, string | undefined, string | undefined] = [method, url, true, undefined, undefined];
       
       return self.originalXMLHttpRequestOpen.apply(this, args);
     };

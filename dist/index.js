@@ -69,7 +69,7 @@ class OpErrorNotifier {
         window.XMLHttpRequest.prototype.open = function (method, url) {
             this._requestMethod = method;
             this._requestURL = url;
-            const args = [method, url, false, undefined, undefined];
+            const args = [method, url, true, undefined, undefined];
             return self.originalXMLHttpRequestOpen.apply(this, args);
         };
         window.XMLHttpRequest.prototype.send = function () {
